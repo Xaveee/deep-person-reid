@@ -1,4 +1,5 @@
 import cv2 # pip install opencv-python
+import sys
 
 config_file = 'ssd_mobilenet_v3_large_coco_2020_01_14.pbtxt'
 frozen_model = 'frozen_inference_graph.pb'
@@ -14,7 +15,6 @@ with open(file_name, 'rt') as fpt:
     classLabels = fpt.read().rstrip("\n").split("\n")
 print(classLabels)
 
-# This is probably able to be
 model.setInputSize(320, 320) # image resolution
 model.setInputScale(1.0 / 127.5)
 model.setInputMean((127.5, 127.5, 127.5)) # mobilenet => [-1,1]
@@ -40,13 +40,20 @@ if cap.isOpened():
 
                 # crop the photo and save it in the output folder
                 x, y, x1, y1 = boxes
-                # draw the bounding box
                 if ClassInd == 1:
-                    #clscommented out for now since we don't want it drawn but not removing in case we need it for latercv2.rectangle(frame, boxes, (255, 0, 0), 2)
+                    #cv2.rectangle(frame, boxes, (255, 0, 0), 2)
                     if (frameCount % 10 == 0):
                         # frame[height:height+height, width:width+width] with additonal padding
+
                         crop_img = frame[y - padding:y1 + y + padding,
                                          x - padding:x1 + x + padding]
+                        try:
+                            #try to resize to fit the size torchreid accepts
+                            crop_img = cv2.resize(crop_img, (128, 256))
+                        except:
+                            continue
+
+                        # crop_img = remove_bg(crop_img)
 
                         image_name = outputFolder + str(id) + ".jpg"
                         try:
