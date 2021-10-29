@@ -45,7 +45,7 @@ if __name__ == '__main__':
         # max_epoch=60,
         # eval_freq=10,
         # print_freq=10,
-        # visrank=True,
-        # visrank_topk=20,
+        visrank=True,
+        visrank_topk=30,
         # rerank=True
     )

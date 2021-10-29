@@ -15,7 +15,7 @@ extractor = FeatureExtractor(
 )
 
 # output folder and the id start number change these!!!!!!
-outputFolder = "data\gallery\gall"
+outputFolder = "data\gallery\gall_"
 queryFolder = 'data\query\query'
 id = 0
 
