@@ -38,7 +38,7 @@ padding = 5
 frameCount = 0
 
 # Threshold for filtering the distance matrix
-threshold = 4.7
+threshold = 4.8
 
 def euclidean_dist(input1, input2):
     dist = 0
@@ -61,18 +61,18 @@ def get_dist_matrix(query_df, gallery_df):
 while cap.isOpened():
     ret, frame = cap.read()
     frameCount += 1
-    ClassIndex, confidence, bbox = model.detect(frame, confThreshold=0.6)
+    if (frameCount % 30 == 0):
+        ClassIndex, confidence, bbox = model.detect(frame, confThreshold=0.6)
 
-    if len(ClassIndex) != 0:
-        for ClassInd, conf, boxes in zip(
-            ClassIndex.flatten(), confidence.flatten(), bbox
-        ):
+        if len(ClassIndex) != 0:
+            for ClassInd, conf, boxes in zip(
+                ClassIndex.flatten(), confidence.flatten(), bbox
+            ):
 
             # crop the photo and save it in the output folder
-            x, y, x1, y1 = boxes
-            if ClassInd == 1:
+                x, y, x1, y1 = boxes
+                if ClassInd == 1:
                 #cv2.rectangle(frame, boxes, (255, 0, 0), 2)
-                if (frameCount % 30 == 0):
                     # frame[height:height+height, width:width+width] with additonal padding
 
                     crop_img = frame[y - padding:y1 + y + padding,
@@ -116,35 +116,35 @@ while cap.isOpened():
 
                                 print('Adding new person to gallery.', 'New ID:', id, '\n')
                                 new_image_name = outputFolder + '_' + str(id) + '_'+ str(frameCount) + ".jpg"
-                                cv2.imwrite(new_image_name, crop_img)
 
                                 img_feature_df = img_feature_df.replace({'filename': image_name}, new_image_name)
                                 # append gallery data with the id of query image
                                 gallery_feature_df = pd.concat([gallery_feature_df, img_feature_df], ignore_index=True)
+                                cv2.imwrite(new_image_name, crop_img)
 
                             else:
                                 print(len(distance_matrix), 'possible mathches')
-                                print('List of possible matches for', frameCount, ':')
-                                for i, id, dist in distance_matrix:
+                                print('Top 5 possible matches for', frameCount, ':')
+                                for i, dist_id, dist in distance_matrix[:5]:
                                     print(gallery_feature_df.iloc[i]['filename'])
 
-                                print('Adding old person to gallery...\n')
+                                print('Adding old person to gallery...', 'ID:', distance_matrix[0][1],'\n')
                                 new_image_name = outputFolder + str(distance_matrix[0][1]) + '_'+ str(frameCount) + ".jpg"
-                                cv2.imwrite(new_image_name, crop_img)
 
                                 # append gallery data with the id of image with lowest dist
                                 img_feature_df = img_feature_df.replace({'filename': image_name}, new_image_name)
                                 img_feature_df = img_feature_df.replace({'id': id}, distance_matrix[0][1])
                                 gallery_feature_df = pd.concat([gallery_feature_df, img_feature_df], ignore_index=True)
+                                cv2.imwrite(new_image_name, crop_img)
+                        id += 1
 
 
                         # image_name = outputFolder + str(id) + ".jpg"
                         # cv2.imwrite(image_name, crop_img)
                         # print(image_name) cv  
 
-                        id += 1
                     except:
-                        print('error')
+                        continue
 
     # Display the resulting frame
     cv2.imshow('Person Detection', frame)
