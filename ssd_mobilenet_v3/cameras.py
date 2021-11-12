@@ -5,6 +5,8 @@ import pandas as pd
 import math
 from torchreid.utils.feature_extractor import FeatureExtractor
 import threading
+import os
+import glob
 
 config_file = 'ssd_mobilenet_v3_large_coco_2020_01_14.pbtxt'
 frozen_model = 'frozen_inference_graph.pb'
@@ -18,8 +20,7 @@ extractor = FeatureExtractor(
 # output folder and the id start number change these!!!!!!
 outputFolder = "data\gallery\gal"
 queryFolder = 'data\query\query'
-global id
-id = 0
+
 # classLabels = []
 # file_name = "labels.txt"
 # with open(file_name, 'rt') as fpt:
@@ -46,7 +47,7 @@ class camThread(threading.Thread):
         self.camID = camID
     def run(self):
         print("Starting " + self.previewName)
-        workingCamera(self.camID, id)
+        workingCamera(self.camID)
 
 def euclidean_dist(input1, input2):
     dist = 0
@@ -66,7 +67,7 @@ def get_dist_matrix(query_df, gallery_df):
     return distance_matrix
 
 
-def workingCamera(camID, id):
+def workingCamera(camID):
     cap = cv2.VideoCapture(camID)
     frameCount = 0
     gallery_feature_df = pd.read_csv('data\gallery_data.csv')
@@ -92,60 +93,6 @@ def workingCamera(camID, id):
                         image_name = queryFolder + str(frameCount) + ".jpg"
                         cv2.imwrite(image_name, crop_img)
 
-                        try:
-                            print('Getting query image feature at frame', frameCount)
-                            img_feature = extractor(image_name)
-                            img_feature_df = pd.DataFrame(img_feature.numpy())
-                            img_feature_df.insert(0, 'id', id)
-                            img_feature_df.insert(0, 'filename', image_name)
-                            
-                            if len(gallery_feature_df) == 0:
-                                print('No image in database yet')
-                                print('Adding img', id, 'to the gallery...\n')
-                                new_image_name = outputFolder + '_' + str(id) + '_'+ str(frameCount) + ".jpg"
-                                cv2.imwrite(new_image_name, crop_img)
-                                img_feature_df = img_feature_df.replace({'filename': image_name}, new_image_name)
-                                gallery_feature_df = img_feature_df
-
-                            else:
-                                print('Calculating distance matrix')
-                                distance_matrix = []
-                                distance_matrix = get_dist_matrix(img_feature_df, gallery_feature_df)
-                                # Sort ascending and Filter with threshold
-                                distance_matrix = sorted(distance_matrix, key=lambda i: i[2])
-                                distance_matrix = [i for i in distance_matrix if i[2] < threshold]
-
-                                if (len(distance_matrix) == 0):
-                                    print('No possible match')
-
-                                    print('Adding new person to gallery.', 'New ID:', id, '\n')
-                                    new_image_name = outputFolder + '_' + str(id) + '_'+ str(frameCount) + ".jpg"
-
-                                    img_feature_df = img_feature_df.replace({'filename': image_name}, new_image_name)
-                                    # append gallery data with the id of query image
-                                    gallery_feature_df = pd.concat([gallery_feature_df, img_feature_df], ignore_index=True)
-                                    cv2.imwrite(new_image_name, crop_img)
-
-                                else:
-                                    print(len(distance_matrix), 'possible mathches')
-                                    print('Top 5 possible matches for', frameCount, ':')
-                                    for i, dist_id, dist in distance_matrix[:5]:
-                                        print(gallery_feature_df.iloc[i]['filename'])
-
-                                    print('Adding old person to gallery...', 'ID:', distance_matrix[0][1],'\n')
-                                    new_image_name = outputFolder + str(distance_matrix[0][1]) + '_'+ str(frameCount) + ".jpg"
-
-                                    # append gallery data with the id of image with lowest dist
-                                    img_feature_df = img_feature_df.replace({'filename': image_name}, new_image_name)
-                                    img_feature_df = img_feature_df.replace({'id': id}, distance_matrix[0][1])
-                                    gallery_feature_df = pd.concat([gallery_feature_df, img_feature_df], ignore_index=True)
-                                    cv2.imwrite(new_image_name, crop_img)
-
-                            id += 1
-
-                        except:
-                            continue
-
         
 
 thread_1 = camThread("Video", "Videos/team_demo.mp4")
@@ -158,3 +105,79 @@ thread_1.start()
 
 # thread_3 = camThread("Live", 0)
 # thread_3.start()
+
+id = 0
+frameCount = 0
+number_of_query = 0
+dir = "data\query"
+
+outputFolder = "data\gallery\gal"
+queryFolder = 'data\query\query'
+
+while(True):
+    list = os.listdir(dir)
+    number_files = len(list)
+    dir_ext = 'data\query\*'
+    if(number_files > number_of_query):
+        list =sorted(glob.iglob(dir_ext), key=os.path.getctime, reverse=False)
+        for i in range(number_files - number_of_query):
+            image_name = list[number_of_query + i]
+            frameCount = image_name[16:]
+            frameCount = frameCount[:-4]
+            try:
+                # Get image features and convert to DataFrame
+                print('Getting query image feature at frame', frameCount)
+                image = cv2.imread(image_name)
+                img_feature = extractor(image)
+                img_feature_df = pd.DataFrame(img_feature.numpy())
+                img_feature_df.insert(0, 'id', id)
+                img_feature_df.insert(0, 'filename', image_name)
+                if len(gallery_feature_df) == 0:
+                            # append gallery data with the id of query image
+                    print('No image in database yet')
+                    print('Adding img', id, 'to the gallery...\n')
+                    new_image_name = outputFolder + '_' + str(id) + '_'+ str(frameCount) + ".jpg"
+                    cv2.imwrite(new_image_name, image)
+                    img_feature_df = img_feature_df.replace({'filename': image_name}, new_image_name)
+                    gallery_feature_df = img_feature_df
+                else:
+                            # get distance matrix (g_id, dist)
+                    print('Calculating distance matrix')
+                    distance_matrix = []
+                    distance_matrix = get_dist_matrix(img_feature_df, gallery_feature_df)
+                    # Sort ascending and Filter with threshold
+                    distance_matrix = sorted(distance_matrix, key=lambda i: i[2])
+                    distance_matrix = [i for i in distance_matrix if i[2] < threshold]
+                            # print(distance_matrix)
+
+                    if (len(distance_matrix) == 0):
+                        print('No possible match')
+
+                        print('Adding new person to gallery.', 'New ID:', id, '\n')
+                        new_image_name = outputFolder + '_' + str(id) + '_'+ str(frameCount) + ".jpg"
+
+                        img_feature_df = img_feature_df.replace({'filename': image_name}, new_image_name)
+                        # append gallery data with the id of query image
+                        gallery_feature_df = pd.concat([gallery_feature_df, img_feature_df], ignore_index=True)
+                        cv2.imwrite(new_image_name, image)
+
+                    else:
+                        print(len(distance_matrix), 'possible mathches')
+                        print('Top 5 possible matches for', frameCount, ':')
+                        for i, dist_id, dist in distance_matrix[:5]:
+                            print(gallery_feature_df.iloc[i]['filename'])
+
+                        print('Adding old person to gallery...', 'ID:', distance_matrix[0][1],'\n')
+                        new_image_name = outputFolder + str(distance_matrix[0][1]) + '_'+ str(frameCount) + ".jpg"
+
+                        # append gallery data with the id of image with lowest dist
+                        img_feature_df = img_feature_df.replace({'filename': image_name}, new_image_name)
+                        img_feature_df = img_feature_df.replace({'id': id}, distance_matrix[0][1])
+                        gallery_feature_df = pd.concat([gallery_feature_df, img_feature_df], ignore_index=True)
+                        cv2.imwrite(new_image_name, image)
+                id += 1
+            except:
+                continue
+    number_of_query = number_files
+    if(number_files == 100):
+        break
