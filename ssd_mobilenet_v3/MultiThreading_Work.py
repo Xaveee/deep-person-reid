@@ -33,21 +33,13 @@ cam_worker(query_queue, feature_extractor, cam):
 """
 
 
-class cam_worker(threading.Thread):
-
-    def __init__(self, query_queue, feature_extractor, cam):
-        threading.Thread.__init__(self)
-        self.query_queue = query_queue
-        self.feature_extractor = feature_extractor
-        self.cam = cam
-
-    def run(self):
-        cap = cv2.VideoCapture(self.cam)
-        while (cap.isOpened()):
-            # Extract features
-            # Append features to query queue
-            query_queue.put(feature)
-        cap.close()
+def cam_worker(query_queue, feature_extractor, cam):
+    cap = cv2.VideoCapture(cam)
+    while (cap.isOpen()):
+        # Extract features
+        # Append features to query queue
+        query_queue.put(feature_extractor)
+    cap.close()
 
 
 """
@@ -63,21 +55,23 @@ comparing_worker(query_queue, gallery):
 """
 
 
-class comparing_worker(threading.Thread):
+def comparing_worker(query_queue, gallery):
 
-    def __init__(self, query_queue, gallery):
-        threading.Thread.__init__(self)
-        self.query_queue = query_queue
-        self.gallery = gallery
-
+    counter = 0
     while (1):
         if query_queue.is_empty():
             continue
+    # Get item from query queue
+    query_queue.get()
+    # Perform Comparison. Maybe every 5 feature or 5 second? Comparing every n
+    counter += 1
+    if counter >= 5:
+        # Perform Comparison
+        pass
+    else:
+        counter = 0
 
-        # Get item from query queue
-        query_queue.get()
-        # Perform Comparison. Maybe every 5 feature or 5 second? Comparing every n
-        # The item(features) from the query has a camID column. ONLY compare with other item that has DIFFERENT camID
+    # The item(features) from the query has a camID column. ONLY compare with other item that has DIFFERENT camID
 
 
 """
