@@ -7,7 +7,7 @@ from torchreid.utils.feature_extractor import FeatureExtractor
 
 config_file = 'ssd_mobilenet_v3_large_coco_2020_01_14.pbtxt'
 frozen_model = 'frozen_inference_graph.pb'
-feature_model = 'osnet_ibn_x1_0_duke_256x128_amsgrad_ep150_stp60_lr0.0015_b64_fb10_softmax_labelsmooth_flip.pth'
+feature_model = 'osnet_ms_d_c.pth.tar'
 gallery_feature_df = pd.read_csv('data\gallery_data.csv')
 model = cv2.dnn_DetectionModel(frozen_model, config_file)
 extractor = FeatureExtractor(
@@ -38,7 +38,7 @@ padding = 5
 frameCount = 0
 
 # Threshold for filtering the distance matrix
-threshold = 4.8
+threshold = 15
 
 def euclidean_dist(input1, input2):
     dist = 0
@@ -60,6 +60,8 @@ def get_dist_matrix(query_df, gallery_df):
 
 while cap.isOpened():
     ret, frame = cap.read()
+    if ret == False:
+        break
     frameCount += 1
     if (frameCount % 30 == 0):
         ClassIndex, confidence, bbox = model.detect(frame, confThreshold=0.6)
@@ -77,15 +79,15 @@ while cap.isOpened():
 
                     crop_img = frame[y - padding:y1 + y + padding,
                                      x - padding:x1 + x + padding]
-                    try:
-                        #try to resize to fit the size torchreid accepts
-                        crop_img = cv2.resize(crop_img, (128, 256))
-                    except:
-                        continue
+                    # try:
+                    #     #try to resize to fit the size torchreid accepts
+                    #     crop_img = cv2.resize(crop_img, (128, 256))
+                    # except:
+                    #     continue
                     # crop_img = remove_bg(crop_img)
-                    image_name = queryFolder + str(frameCount) + ".jpg"
-                    cv2.imwrite(image_name, crop_img)
                     try:
+                        image_name = queryFolder + str(frameCount) + ".jpg"
+                        cv2.imwrite(image_name, crop_img)
                         # Get image features and convert to DataFrame
                         print('Getting query image feature at frame', frameCount)
                         img_feature = extractor(image_name)
