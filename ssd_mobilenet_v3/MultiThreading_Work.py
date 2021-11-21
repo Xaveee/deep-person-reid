@@ -1,10 +1,10 @@
-import cv2 # pip install opencv-python
+import cv2
 import numpy as np
 import pandas as pd
-import math
 from torchreid.utils.feature_extractor import FeatureExtractor
 import os
 from multiprocessing import Process, Queue
+from utilities import birch_clustering, DBSCAN_clustering, mean_shift_clustering, get_output
 
 gallery_feature_df = pd.read_csv('data\gallery_data.csv')
 
@@ -63,6 +63,7 @@ def cam_worker(query_queue, feature_extractor, cam, cam_id):
                         # query_queue.put(img_feature)
                         # print(img_feature)
 
+<<<<<<< HEAD
                         # img_feature_df = pd.DataFrame(img_feature.numpy())
                         # img_feature_df.insert(0, 'id', -1)
                         # img_feature_df.insert(0, 'cam_id', cam_id)
@@ -70,6 +71,15 @@ def cam_worker(query_queue, feature_extractor, cam, cam_id):
                         # img_feature_df.insert(0, 'frame', frame_count)
                         # print(img_feature_df)
                         query_queue.put(img_feature.numpy())
+=======
+                        img_feature_df = pd.DataFrame(img_feature.numpy())
+                        img_feature_df.insert(0, 'id', -1)
+                        img_feature_df.insert(0, 'cam_id', cam_id)
+                        img_feature_df.insert(0, 'filename', img_name)
+                        img_feature_df.insert(0, 'frame', frame_count)
+                        # print(img_feature_df)
+                        query_queue.put(img_feature_df)
+>>>>>>> 17341759fcf07564ddef13a73ef3aedac9e1ee58
 
         cv2.imshow('Camera ' + cam_id, cv2.resize(frame, (675, 1200)))
         if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -96,22 +106,49 @@ comparing_worker(query_queue, gallery):
 """
 
 
+<<<<<<< HEAD
 def comparing_worker(query_queue, gallery: list):
 
+=======
+def comparing_worker(query_queue, gallery):
+    # Output csv's columns: frame count - file name - cam id - person id - 5 people in the same cluster (not closest)
+>>>>>>> 17341759fcf07564ddef13a73ef3aedac9e1ee58
     counter = 0
     while (1):
         if query_queue.empty():
             continue
         # Get item from query queue
+<<<<<<< HEAD
         gallery.append(query_queue.get())
         print('Gallery length:', len(gallery))
-        # Perform Comparison. Maybe every 5 feature or 5 second? Comparing every n
-        counter += 1
-        if counter >= 5:
-            # Perform Comparison
-            pass
+=======
+        feature = query_queue.get()
+        np_feature = feature.values
+        # print('working...')
+        if gallery == [[]]:
+            gallery = np_feature
         else:
-            counter = 0
+            gallery = np.concatenate((gallery, np_feature), axis=0)
+        if gallery.shape[0] % 100 != 0:
+            continue
+>>>>>>> 17341759fcf07564ddef13a73ef3aedac9e1ee58
+        # Perform Comparison. Maybe every 5 feature or 5 second? Comparing every n
+        feature_arr = gallery[:, 4:]
+        # print(feature_arr)
+        label = DBSCAN_clustering(feature_arr).reshape(-1, 1)
+        labeled_arr = np.concatenate((gallery, label), axis=1)
+
+        # print(labeled_arr)
+        # End of comparison
+        counter += 1
+        if gallery.shape[0] % 100 == 0:
+            # Update features csv
+            out_df = pd.DataFrame(get_output(labeled_arr))
+            out_df.to_csv('data/labeled_gal.csv', header=False, index=False)
+            gal_df = pd.DataFrame(gallery)
+            gal_df.to_csv('data/gallery.csv', header=False, index=False)
+        else:
+            pass
 
         # The item(features) from the query has a camID column. ONLY compare with other item that has DIFFERENT camID
 
@@ -132,7 +169,7 @@ main(cam_list, feature_extractor):
 def main(cam_list, feature_extractor):
     # initialize query_queue and gallery
     query_queue = Queue()
-    gallery = []
+    gallery = [[]]
     for cam_id, cam in enumerate(cam_list):
         process = Process(
             target=cam_worker,
