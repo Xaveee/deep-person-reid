@@ -42,10 +42,10 @@ def cam_worker(query_queue, feature_extractor, cam, cam_id):
         if (ret == False):
             print('cam', cam_id, 'ended')
             break
-
-        if (frame_count % 5 == 0):
+        frame = cv2.resize(frame, (320, 320))
+        if (frame_count % 30 == 0):
             ClassIndex, confidence, bbox = detection_model.detect(
-                frame=cv2.resize(frame, (320, 320)), confThreshold=0.6
+                frame, confThreshold=0.6
             )
             if len(ClassIndex) != 0:
                 for ClassInd, conf, boxes in zip(
@@ -54,24 +54,19 @@ def cam_worker(query_queue, feature_extractor, cam, cam_id):
                     x, y, w, h = boxes
                     if ClassInd == 1:
                         crop_img = frame[y:y + h, x:x + w]
-                        img_name = cam_id + '_' + '.jpg'
-                        cv2.imwrite(os.path.join('data', img_name), crop_img)
+                        img_name = cam_id + '_' + str(frame_count) + '.jpg'
+                        gal_folder = 'data/gallery/{}'.format(cam_id)
+                        cv2.imwrite(
+                            os.path.join(gal_folder, img_name),
+                            cv2.resize(crop_img, (360, 640))
+                        )
                         print('Extracting', img_name)
                         img_feature = feature_extractor(
-                            os.path.join('data', img_name)
+                            os.path.join(gal_folder, img_name)
                         )
                         # query_queue.put(img_feature)
                         # print(img_feature)
 
-<<<<<<< HEAD
-                        # img_feature_df = pd.DataFrame(img_feature.numpy())
-                        # img_feature_df.insert(0, 'id', -1)
-                        # img_feature_df.insert(0, 'cam_id', cam_id)
-                        # img_feature_df.insert(0, 'filename', img_name)
-                        # img_feature_df.insert(0, 'frame', frame_count)
-                        # print(img_feature_df)
-                        query_queue.put(img_feature.numpy())
-=======
                         img_feature_df = pd.DataFrame(img_feature.numpy())
                         img_feature_df.insert(0, 'id', -1)
                         img_feature_df.insert(0, 'cam_id', cam_id)
@@ -79,7 +74,6 @@ def cam_worker(query_queue, feature_extractor, cam, cam_id):
                         img_feature_df.insert(0, 'frame', frame_count)
                         # print(img_feature_df)
                         query_queue.put(img_feature_df)
->>>>>>> 17341759fcf07564ddef13a73ef3aedac9e1ee58
 
         cv2.imshow('Camera ' + cam_id, cv2.resize(frame, (675, 1200)))
         if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -106,22 +100,13 @@ comparing_worker(query_queue, gallery):
 """
 
 
-<<<<<<< HEAD
-def comparing_worker(query_queue, gallery: list):
-
-=======
 def comparing_worker(query_queue, gallery):
     # Output csv's columns: frame count - file name - cam id - person id - 5 people in the same cluster (not closest)
->>>>>>> 17341759fcf07564ddef13a73ef3aedac9e1ee58
     counter = 0
     while (1):
         if query_queue.empty():
             continue
         # Get item from query queue
-<<<<<<< HEAD
-        gallery.append(query_queue.get())
-        print('Gallery length:', len(gallery))
-=======
         feature = query_queue.get()
         np_feature = feature.values
         # print('working...')
@@ -131,11 +116,10 @@ def comparing_worker(query_queue, gallery):
             gallery = np.concatenate((gallery, np_feature), axis=0)
         if gallery.shape[0] % 100 != 0:
             continue
->>>>>>> 17341759fcf07564ddef13a73ef3aedac9e1ee58
         # Perform Comparison. Maybe every 5 feature or 5 second? Comparing every n
         feature_arr = gallery[:, 4:]
         # print(feature_arr)
-        label = DBSCAN_clustering(feature_arr).reshape(-1, 1)
+        label = mean_shift_clustering(feature_arr).reshape(-1, 1)
         labeled_arr = np.concatenate((gallery, label), axis=1)
 
         # print(labeled_arr)
@@ -171,6 +155,10 @@ def main(cam_list, feature_extractor):
     query_queue = Queue()
     gallery = [[]]
     for cam_id, cam in enumerate(cam_list):
+        try:
+            os.mkdir('data/gallery/' + str(cam_id))
+        except:
+            pass
         process = Process(
             target=cam_worker,
             args=(query_queue, feature_extractor, cam, str(cam_id))
