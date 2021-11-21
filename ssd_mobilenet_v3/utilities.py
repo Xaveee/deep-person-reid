@@ -55,7 +55,8 @@ def get_nearest_neighbor(chosen_arr, labeled_arr):
     if same_clust.size <= 5:
         return np.array(['No similar matches', '', '', '', ''])
     same_clust = same_clust[:5]
-    nearest_neighbors = np.apply_along_axis(lambda x: 'cam ' + str(x[2]) + ' frame count ' + str(x[0]), 1, same_clust)
+    #print(same_clust[:, 0])
+    nearest_neighbors = np.apply_along_axis(lambda x: 'cam ' + str(x[2]) + ' frame count ' + str(x[0]) + ' ', 1, same_clust)
     return nearest_neighbors
 
 
