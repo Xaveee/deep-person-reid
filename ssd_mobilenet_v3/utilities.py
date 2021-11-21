@@ -55,8 +55,11 @@ def get_nearest_neighbor(chosen_arr, labeled_arr):
     if same_clust.size <= 5:
         return np.array(['No similar matches', '', '', '', ''])
     same_clust = same_clust[:5]
-    #print(same_clust[:, 0])
-    nearest_neighbors = np.apply_along_axis(lambda x: 'cam ' + str(x[2]) + ' frame count ' + str(x[0]) + ' ', 1, same_clust)
+    print(same_clust[:, 0])
+    nearest_neighbors = []
+    for sample in same_clust:
+        nearest_neighbors = np.append(nearest_neighbors, 'cam ' + str(sample[2]) + ' frame count ' + str(sample[0]))
+    print(nearest_neighbors)
     return nearest_neighbors
 
 
@@ -68,6 +71,8 @@ def get_output(labeled_arr):
     additional_arr = [[]]
     for sample in labeled_arr:
         nearest_neighbors = get_nearest_neighbor(sample, labeled_arr)
+        print(nearest_neighbors)
+        print()
         #print(nearest_neighbors, 5 - nearest_neighbors.shape[0])
         if nearest_neighbors.shape[0] < 5:
             nearest_neighbors = np.pad(nearest_neighbors, (0, 5 - nearest_neighbors.shape[0]), 'constant', constant_values=('', ''))
@@ -75,6 +80,5 @@ def get_output(labeled_arr):
             additional_arr = [nearest_neighbors]
         else:
             additional_arr = np.concatenate((additional_arr, [nearest_neighbors]), axis=0)
-
     return np.concatenate((misc_arr, additional_arr), axis=1)
     # return additional_arr

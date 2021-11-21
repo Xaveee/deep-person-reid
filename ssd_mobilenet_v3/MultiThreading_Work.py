@@ -43,7 +43,7 @@ def cam_worker(query_queue, feature_extractor, cam, cam_id):
             print('cam', cam_id, 'ended')
             break
         frame = cv2.resize(frame, (320, 320))
-        if (frame_count % 30 == 0):
+        if (frame_count % 5 == 0):
             ClassIndex, confidence, bbox = detection_model.detect(
                 frame, confThreshold=0.6
             )
