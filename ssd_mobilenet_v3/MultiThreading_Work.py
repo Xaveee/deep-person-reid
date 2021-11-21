@@ -43,18 +43,17 @@ def cam_worker(query_queue, feature_extractor, cam, cam_id):
             print('cam', cam_id, 'ended')
             break
 
-        if (frame_count % 30 == 0):
+        if (frame_count % 5 == 0):
             ClassIndex, confidence, bbox = detection_model.detect(
-                frame, confThreshold=0.6
+                frame=cv2.resize(frame, (320, 320)), confThreshold=0.6
             )
             if len(ClassIndex) != 0:
                 for ClassInd, conf, boxes in zip(
                     ClassIndex.flatten(), confidence.flatten(), bbox
                 ):
-                    x, y, x1, y1 = boxes
+                    x, y, w, h = boxes
                     if ClassInd == 1:
-                        crop_img = frame[y - padding:y1 + y + padding,
-                                         x - padding:x1 + x + padding]
+                        crop_img = frame[y:y + h, x:x + w]
                         img_name = cam_id + '_' + '.jpg'
                         cv2.imwrite(os.path.join('data', img_name), crop_img)
                         print('Extracting', img_name)
@@ -64,15 +63,15 @@ def cam_worker(query_queue, feature_extractor, cam, cam_id):
                         # query_queue.put(img_feature)
                         # print(img_feature)
 
-                        img_feature_df = pd.DataFrame(img_feature.numpy())
-                        img_feature_df.insert(0, 'id', -1)
-                        img_feature_df.insert(0, 'cam_id', cam_id)
-                        img_feature_df.insert(0, 'filename', img_name)
-                        img_feature_df.insert(0, 'frame', frame_count)
-                        print(img_feature_df)
-                        query_queue.put(img_feature_df)
+                        # img_feature_df = pd.DataFrame(img_feature.numpy())
+                        # img_feature_df.insert(0, 'id', -1)
+                        # img_feature_df.insert(0, 'cam_id', cam_id)
+                        # img_feature_df.insert(0, 'filename', img_name)
+                        # img_feature_df.insert(0, 'frame', frame_count)
+                        # print(img_feature_df)
+                        query_queue.put(img_feature.numpy())
 
-        cv2.imshow('Camera ' + cam_id, frame)
+        cv2.imshow('Camera ' + cam_id, cv2.resize(frame, (675, 1200)))
         if cv2.waitKey(1) & 0xFF == ord('q'):
             print('killing cam', cam_id)
             query_queue.close()
@@ -97,14 +96,15 @@ comparing_worker(query_queue, gallery):
 """
 
 
-def comparing_worker(query_queue, gallery):
+def comparing_worker(query_queue, gallery: list):
 
     counter = 0
     while (1):
         if query_queue.empty():
             continue
         # Get item from query queue
-        feature = query_queue.get()
+        gallery.append(query_queue.get())
+        print('Gallery length:', len(gallery))
         # Perform Comparison. Maybe every 5 feature or 5 second? Comparing every n
         counter += 1
         if counter >= 5:
