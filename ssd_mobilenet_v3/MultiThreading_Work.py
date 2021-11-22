@@ -101,32 +101,40 @@ comparing_worker(query_queue, gallery):
 
 
 def comparing_worker(query_queue, gallery):
-    # Output csv's columns: frame count - file name - cam id - person id - 5 people in the same cluster (not closest)
-    counter = 0
+    '''
+    Comparing component
+    This component get the features of a new image from the query queue, then cluster and label them.
+    Output csv's columns: frame count - file name - cam id - person id - 5 people in the same cluster (not closest)
+    '''
+    counter = 0  # unused
     while (1):
         if query_queue.empty():
+            # If the queue is empty, keep looping
             continue
         # Get item from query queue
         feature = query_queue.get()
         np_feature = feature.values
         # print('working...')
         if gallery == [[]]:
+            # If gallery is empty, set the first sample as gallery
             gallery = np_feature
         else:
+            # If the gallery has data, add the new sample to gallery
             gallery = np.concatenate((gallery, np_feature), axis=0)
         if gallery.shape[0] % 100 != 0:
+            # Perform clustering every 100 frames input
             continue
-        # Perform Comparison. Maybe every 5 feature or 5 second? Comparing every n
+        # START COMPARISON.
         feature_arr = gallery[:, 4:]
-        # print(feature_arr)
+        # We can change between DBSCAN_clustering, birch_clustering and mean_shift_clustering
         label = mean_shift_clustering(feature_arr).reshape(-1, 1)
         labeled_arr = np.concatenate((gallery, label), axis=1)
 
         # print(labeled_arr)
-        # End of comparison
+        # END COMPARISON
         counter += 1
         if gallery.shape[0] % 100 == 0:
-            # Update features csv
+            # Update features csv and labeled csv every 100 frames input
             out_df = pd.DataFrame(get_output(labeled_arr))
             out_df.to_csv('data/labeled_gal.csv', header=False, index=False)
             gal_df = pd.DataFrame(gallery)
