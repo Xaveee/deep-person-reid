@@ -1,6 +1,9 @@
+#from sys import last_traceback
 import cv2
 import numpy as np
 import pandas as pd
+from datetime import datetime
+from scipy.cluster.hierarchy import leaders
 from torchreid.utils.feature_extractor import FeatureExtractor
 import os
 from multiprocessing import Process, Queue
@@ -43,9 +46,9 @@ def cam_worker(query_queue, feature_extractor, cam, cam_id):
             print('cam', cam_id, 'ended')
             break
         frame = cv2.resize(frame, (320, 320))
-        if (frame_count % 5 == 0):
+        if (frame_count % 2 == 0):
             ClassIndex, confidence, bbox = detection_model.detect(
-                frame, confThreshold=0.6
+                frame, confThreshold=0.8
             )
             if len(ClassIndex) != 0:
                 for ClassInd, conf, boxes in zip(
@@ -68,7 +71,8 @@ def cam_worker(query_queue, feature_extractor, cam, cam_id):
                         # print(img_feature)
 
                         img_feature_df = pd.DataFrame(img_feature.numpy())
-                        img_feature_df.insert(0, 'id', -1)
+                        img_feature_df.insert(0, 'actual_time', (datetime.now()-datetime(1970, 1, 1)).total_seconds())
+                        img_feature_df.insert(0, 'display_time', datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
                         img_feature_df.insert(0, 'cam_id', cam_id)
                         img_feature_df.insert(0, 'filename', img_name)
                         img_feature_df.insert(0, 'frame', frame_count)
@@ -107,6 +111,7 @@ def comparing_worker(query_queue, gallery):
     Output csv's columns: frame count - file name - cam id - person id - 5 people in the same cluster (not closest)
     '''
     counter = 0  # unused
+    latest_save_time = datetime.now()
     while (1):
         if query_queue.empty():
             # If the queue is empty, keep looping
@@ -133,12 +138,18 @@ def comparing_worker(query_queue, gallery):
         # print(labeled_arr)
         # END COMPARISON
         counter += 1
-        if gallery.shape[0] % 100 == 0:
-            # Update features csv and labeled csv every 100 frames input
+        now = datetime.now()
+        current_time = now.strftime("%H:%M:%S")
+        if (now-latest_save_time).total_seconds() >= 30:
+            # Update features csv and labeled csv every 30s
             out_df = pd.DataFrame(get_output(labeled_arr))
             out_df.to_csv('data/labeled_gal.csv', header=False, index=False)
             gal_df = pd.DataFrame(gallery)
             gal_df.to_csv('data/gallery.csv', header=False, index=False)
+            # reset latest save time
+            print()
+            print('SAVED AT', current_time, end='\n\n')
+            latest_save_time = now
         else:
             pass
 

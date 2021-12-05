@@ -65,7 +65,7 @@ def mean_shift_clustering(feature, threshold=4.6):
 
 def get_nearest_neighbor(chosen_arr, labeled_arr):
     '''
-    Function to get the 5 <<not very near>> neighbors of a chosen array
+    Function to get the 5 neighbors with the oldest time recorded of a chosen array
     chosen_arr: The array to be compared
     labeled_arr: The labled dataset
     Output: An array contains 5 neighbors of the chosen point 
@@ -76,6 +76,7 @@ def get_nearest_neighbor(chosen_arr, labeled_arr):
     if same_clust.size <= 5:
         # In case there is no match
         return np.array(['No similar matches', '', '', '', ''])
+    same_clust = same_clust[np.argsort(same_clust[:, 4])]
     same_clust = same_clust[:5]
     #print(same_clust[:, 0])
     nearest_neighbors = []
@@ -91,7 +92,7 @@ def get_output(labeled_arr):
     labeled_arr: The labeled dataset
     Output: A numpy array with all the samples and their framecount - file name - cam id - label (person id) - 5 matches if possible, 
     '''
-    misc_arr = labeled_arr[:, [0, 1, 2, -1]]
+    misc_arr = labeled_arr[:, [0, 1, 2, 3, -1]]
 
     additional_arr = [[]]
     for sample in labeled_arr:
