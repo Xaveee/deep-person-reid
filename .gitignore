@@ -140,3 +140,4 @@ model-zoo/
 debug*
 ssd_mobilenet_v3/data/gallery
 ssd_mobilenet_v3/data/query
+ssd_mobilenet_v3/data/visualization
