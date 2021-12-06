@@ -7,6 +7,8 @@ from sklearn.cluster import Birch
 from sklearn.cluster import DBSCAN
 from sklearn.cluster import MeanShift
 from umap.umap_ import nearest_neighbors
+import os
+import shutil
 
 
 def birch_clustering(feature, threshold=5.3):
@@ -39,8 +41,8 @@ def DBSCAN_clustering(feature, eps=3.1):
     Output: The label of input array
     '''
     reducer = umap.UMAP(random_state=1, metric='manhattan')
-    scaled_feature = StandardScaler().fit_transform(feature)
-    embedding = reducer.fit_transform(scaled_feature)
+    #scaled_feature = StandardScaler().fit_transform(feature)
+    embedding = reducer.fit_transform(feature)
 
     clustering = DBSCAN(eps=eps).fit(embedding)
 
@@ -107,3 +109,25 @@ def get_output(labeled_arr):
         else:
             additional_arr = np.concatenate((additional_arr, [nearest_neighbors]), axis=0)
     return np.concatenate((misc_arr, additional_arr), axis=1)
+
+
+def visualization(out_df):
+    current_dir = os.getcwd().replace('\\', '/')
+    visualization_dir = current_dir + '/data/visualization'
+    if os.path.isdir(visualization_dir) == False:
+        os.makedirs(visualization_dir)
+    for person_id in range(out_df['Person ID'].min(), out_df['Person ID'].max()+1):
+        person_dir = visualization_dir + '/' + str(person_id)
+        if os.path.isdir(person_dir) == False:
+            os.makedirs(person_dir)
+        person_df = out_df[out_df['Person ID'] == person_id]
+        for index in range(len(person_df['Person ID'].to_list())):
+            person_data = person_df.values[index]
+            source_file = current_dir + '/data/gallery/' + str(person_data[2]) + '/' + str(person_data[1])
+            # print(source_file)
+            filename = str(person_data[3]).replace('/', '_')
+            filename = filename.replace(':', '_')
+            filename = filename.replace(' ', '_')
+            target_file = person_dir + '/' + 'cam_' + str(person_data[2]) + '_time_' + filename + '.jpg'
+            # print(target_file)
+            shutil.copyfile(source_file, target_file)

@@ -7,9 +7,7 @@ from scipy.cluster.hierarchy import leaders
 from torchreid.utils.feature_extractor import FeatureExtractor
 import os
 from multiprocessing import Process, Queue
-from utilities import birch_clustering, DBSCAN_clustering, mean_shift_clustering, get_output
-
-gallery_feature_df = pd.read_csv('data\gallery_data.csv')
+from utilities import birch_clustering, DBSCAN_clustering, mean_shift_clustering, get_output, visualization
 
 # output folder and the id start number change these!!!!!!
 outputFolder = "data\gallery\gal"
@@ -46,9 +44,9 @@ def cam_worker(query_queue, feature_extractor, cam, cam_id):
             print('cam', cam_id, 'ended')
             break
         frame = cv2.resize(frame, (320, 320))
-        if (frame_count % 2 == 0):
+        if (frame_count % 5 == 0):
             ClassIndex, confidence, bbox = detection_model.detect(
-                frame, confThreshold=0.8
+                frame, confThreshold=0.6
             )
             if len(ClassIndex) != 0:
                 for ClassInd, conf, boxes in zip(
@@ -132,7 +130,7 @@ def comparing_worker(query_queue, gallery):
         # START COMPARISON.
         feature_arr = gallery[:, 4:]
         # We can change between DBSCAN_clustering, birch_clustering and mean_shift_clustering
-        label = mean_shift_clustering(feature_arr).reshape(-1, 1)
+        label = DBSCAN_clustering(feature_arr).reshape(-1, 1)
         labeled_arr = np.concatenate((gallery, label), axis=1)
 
         # print(labeled_arr)
@@ -143,7 +141,9 @@ def comparing_worker(query_queue, gallery):
         if (now-latest_save_time).total_seconds() >= 30:
             # Update features csv and labeled csv every 30s
             out_df = pd.DataFrame(get_output(labeled_arr))
-            out_df.to_csv('data/labeled_gal.csv', header=False, index=False)
+            out_df.columns = ['Frame Count', 'File Name', 'Camera ID', 'Time Stamp', 'Person ID', '1st Match', '2nd Match', '3rd Match', '4th Match', '5th Match']
+            out_df.to_csv('data/labeled_gal.csv', index=False)
+            visualization(out_df)
             gal_df = pd.DataFrame(gallery)
             gal_df.to_csv('data/gallery.csv', header=False, index=False)
             # reset latest save time
