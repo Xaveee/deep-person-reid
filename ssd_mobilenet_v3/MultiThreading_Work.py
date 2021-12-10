@@ -12,15 +12,6 @@ from utilities import birch_clustering, DBSCAN_clustering, mean_shift_clustering
 # output folder and the id start number change these!!!!!!
 outputFolder = "data\gallery\gal"
 queryFolder = 'data\query\query'
-"""
-cam_worker(query_queue, feature_extractor, cam):
-    cap = cv2.VideoCapture(cam)
-    while(cap.isOpen()):
-        # Extract features
-        # Append features to query queue
-        query_queue.put(feature)
-    cap.close()
-"""
 
 
 def cam_worker(query_queue, feature_extractor, cam, cam_id):
@@ -36,7 +27,8 @@ def cam_worker(query_queue, feature_extractor, cam, cam_id):
     frame_count = 0
 
     print('starting cam', cam_id)
-    cap = cv2.VideoCapture(os.path.join('Videos/thread', cam))
+    # cap = cv2.VideoCapture(os.path.join('Videos/thread', cam))
+    cap = cv2.VideoCapture(int(cam_id)+1)
     while cap.isOpened():
         frame_count += 1
         ret, frame = cap.read()
@@ -59,7 +51,9 @@ def cam_worker(query_queue, feature_extractor, cam, cam_id):
                         gal_folder = 'data/gallery/{}'.format(cam_id)
                         cv2.imwrite(
                             os.path.join(gal_folder, img_name),
-                            cv2.resize(crop_img, (360, 640))
+                            # cv2.resize(crop_img, (360, 640))
+                            # cv2.resize(crop_img, (640, 480))
+                            crop_img
                         )
                         print('Extracting', img_name)
                         img_feature = feature_extractor(
@@ -77,7 +71,7 @@ def cam_worker(query_queue, feature_extractor, cam, cam_id):
                         # print(img_feature_df)
                         query_queue.put(img_feature_df)
 
-        cv2.imshow('Camera ' + cam_id, cv2.resize(frame, (675, 1200)))
+        cv2.imshow('Camera ' + cam_id, cv2.resize(frame, (640, 480)))
         if cv2.waitKey(1) & 0xFF == ord('q'):
             print('killing cam', cam_id)
             query_queue.close()
@@ -89,17 +83,6 @@ def cam_worker(query_queue, feature_extractor, cam, cam_id):
     cv2.destroyAllWindows()
 
 
-"""
-comparing_worker(query_queue, gallery):
-    while(1):
-        if query_queue.is_empty():
-            continue
-            
-        # Get item from query queue
-        query_queue.get()
-        # Perform Comparison. Maybe every 5 feature or 5 second? Comparing every n
-        # The item(features) from the query has a camID column. ONLY compare with other item that has DIFFERENT camID
-"""
 
 
 def comparing_worker(query_queue, gallery):
@@ -108,7 +91,7 @@ def comparing_worker(query_queue, gallery):
     This component get the features of a new image from the query queue, then cluster and label them.
     Output csv's columns: frame count - file name - cam id - person id - 5 people in the same cluster (not closest)
     '''
-    counter = 0  # unused
+    # counter = 0  # unused
     latest_save_time = datetime.now()
     while (1):
         if query_queue.empty():
@@ -130,15 +113,15 @@ def comparing_worker(query_queue, gallery):
         # START COMPARISON.
         feature_arr = gallery[:, 4:]
         # We can change between DBSCAN_clustering, birch_clustering and mean_shift_clustering
-        label = DBSCAN_clustering(feature_arr).reshape(-1, 1)
+        label = DBSCAN_clustering(feature_arr, eps = 4.6).reshape(-1, 1)
         labeled_arr = np.concatenate((gallery, label), axis=1)
 
         # print(labeled_arr)
         # END COMPARISON
-        counter += 1
+        # counter += 1
         now = datetime.now()
         current_time = now.strftime("%H:%M:%S")
-        if (now-latest_save_time).total_seconds() >= 30:
+        if (now-latest_save_time).total_seconds() >= 10:
             # Update features csv and labeled csv every 30s
             out_df = pd.DataFrame(get_output(labeled_arr))
             out_df.columns = ['Frame Count', 'File Name', 'Camera ID', 'Time Stamp', 'Person ID', '1st Match', '2nd Match', '3rd Match', '4th Match', '5th Match']
@@ -155,18 +138,6 @@ def comparing_worker(query_queue, gallery):
 
         # The item(features) from the query has a camID column. ONLY compare with other item that has DIFFERENT camID
 
-
-"""
-main(cam_list, feature_extractor):
-    # initialize query_queue and gallery
-    
-    for cam in cam_list:
-        process = Process(target=cam_worker, arg=(query_queue, feature_extractor, cam)
-        process.start
-        
-    
-    process = Process(target=comparing_worker, arg=(query_queue, gallery)
-"""
 
 
 def main(cam_list, feature_extractor):
@@ -195,5 +166,7 @@ if __name__ == '__main__':
     feature_extractor = FeatureExtractor(
         model_name='osnet_x1_0', model_path=feature_model, device='cpu'
     )
-    print(cam_list)
+    # print(cam_list)
+    cam_num = 2
+    cam_list = [''] * cam_num
     main(cam_list, feature_extractor)

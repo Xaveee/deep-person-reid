@@ -21,7 +21,7 @@ def birch_clustering(feature, threshold=5.3):
     '''
     reducer = umap.UMAP(random_state=1, metric='manhattan')
     scaled_feature = StandardScaler().fit_transform(feature)
-    embedding = reducer.fit_transform(scaled_feature)
+    embedding = reducer.fit_transform(feature)
 
     clustering = Birch(
         threshold=threshold,
@@ -58,7 +58,7 @@ def mean_shift_clustering(feature, threshold=4.6):
     '''
     reducer = umap.UMAP(random_state=1, metric='manhattan')
     scaled_feature = StandardScaler().fit_transform(feature)
-    embedding = reducer.fit_transform(scaled_feature)
+    embedding = reducer.fit_transform(feature)
 
     clustering = MeanShift(bandwidth=threshold).fit(embedding)
 
@@ -114,6 +114,7 @@ def get_output(labeled_arr):
 def visualization(out_df):
     current_dir = os.getcwd().replace('\\', '/')
     visualization_dir = current_dir + '/data/visualization'
+    shutil.rmtree(visualization_dir, ignore_errors = True)
     if os.path.isdir(visualization_dir) == False:
         os.makedirs(visualization_dir)
     for person_id in range(out_df['Person ID'].min(), out_df['Person ID'].max()+1):
