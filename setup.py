@@ -48,7 +48,7 @@ setup(
     description='A library for deep learning person re-ID in PyTorch',
     author='Kaiyang Zhou',
     license='MIT',
-    long_description=readme(),
+    # long_description=readme(),
     url='https://github.com/KaiyangZhou/deep-person-reid',
     packages=find_packages(),
     keywords=['Person Re-Identification', 'Deep Learning', 'Computer Vision'],

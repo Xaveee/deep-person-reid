@@ -12,6 +12,8 @@ from utilities import DBSCAN_clustering, get_output, visualization
 # function by which each camera thread runs
 # Functional requirement 10 in SRS
 
+cam_num = 1
+
 def cam_worker(query_queue, feature_extractor, cam, cam_id):
     # Initializing arguments for human detection extarctor
 
@@ -30,7 +32,7 @@ def cam_worker(query_queue, feature_extractor, cam, cam_id):
 
     # next line can be uncommented if user wants to run program on already recorded videos
     # cap = cv2.VideoCapture(os.path.join('Videos/thread', cam))
-    cap = cv2.VideoCapture(int(cam_id)+1)
+    cap = cv2.VideoCapture(int(cam_id))
     while cap.isOpened():
 
         # Increasing frame count with each iteration
@@ -219,6 +221,11 @@ def main(cam_list, feature_extractor):
     # for each camera starting individual thread
     # functional requirement 10 in SRS
 
+    try:
+        os.mkdir('data/gallery/')
+    except:
+        pass
+
     for cam_id, cam in enumerate(cam_list):
         try:
             os.mkdir('data/gallery/' + str(cam_id))
@@ -249,7 +256,6 @@ if __name__ == '__main__':
     )
 
     # Number of cameras, can be changed by the user
-    cam_num = 2
     cam_list = [''] * cam_num
     main(cam_list, feature_extractor)
 
