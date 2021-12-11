@@ -56,7 +56,8 @@ Make sure to tick "Add to PATH" box
 ## Running the program
 11. type in termimal 'cd ssd_mobilenet_v3' to change the working directory
 12. To change the number of cameras in the camera network. Go to "ssd_mobilenet_v3\re-id.py" and change cam_num (line 15) value.
-13. Use 'python re-id.py' to run. The time it takes to boot up depending on the processor of the computer. 
+13. Use 'python re-id.py' to run (the virtual must be activated for the program to run). The time it takes to boot up depending on the processor of the computer.
+14. To deativate, just type deactivate to the terminal
 
 
 ## Notes
