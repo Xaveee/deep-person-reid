@@ -30,38 +30,41 @@
 ## Person Re-Identification
 
 Person Reidentification is an application that uses deep learning to accurately identify and re-identify individuals. The application will take the input from either a webcam or a pre-recorded video and run recognition against a database of each person that comes across the camera network. The application will identify the person in frame of a given camera and inform the user of each identified individual otherwise our software will create a new ID.
-### Built With
-
-* [Python](https://www.python.org/)
-* [Torchreid](https://github.com/KaiyangZhou/deep-person-reid)
-
-<p align="right">(<a href="#top">back to top</a>)</p>
-
-
 
 <!-- GETTING STARTED -->
-## Getting Started
-
-This is an example of how you may give instructions on setting up your project locally.
-To get a local copy up and running follow these simple example steps.
-
 ### Installation
+First make sure that python is installed: https://www.python.org/
+Make sure to tick "Add to PATH" box
+
 1. Create an empty folder to clone git
 2. Open that folder in VScode
-3. Open termimal and enter 'git clone https://github.com/Xaveee/deep-person-reid.git'
+3. Open termimal (make sure it's a command prompt and not a powershell) and enter 'git clone https://github.com/Xaveee/deep-person-reid.git'
 4. CLOSE the current folder and open the one you just clone (deep-person-reid)
 
-# IMPORTANT: Make sure that you have deativated any conda environment. We dont want to install to the wrong environment
+## IMPORTANT: Make sure that you have deativated any conda environment. We dont want to install to the wrong environment
 
-### Create virtual environment
-5. Open the terminal and type 'py -m venv venv'
-### Install packages
+## Create virtual environment
+5. Open the terminal (make sure it's a command prompt and not a powershell) and type 'py -m venv venv'
+## Install packages
 6. First activate the virtual environment by entering into the terminal '.\venv\scripts\activate'. You should see the '(venv)' at the beginning of your working folder
 7. Change your python interpreter. Press 'Ctrl + Shift + P'. Look for 'Python: select interpreter'. Select 'enter interpreter path'. Select 'venv\scripts\python.exe'. Now you should see that you are using the venv interpreter in the bottom left corner
 8. Install all packages by typing into the termimal 'pip install -r requirements.txt'
-### Install torch. 
+## Install torch. 
 9. Type in the termimal 'pip3 install torch==1.10.0+cu113 torchvision==0.11.1+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html'
 10. Type in the termimal 'python setup.py develop'
+
+## Running the program
+11. type in termimal 'cd ssd_mobilenet_v3' to change the working directory
+12. To change the number of cameras in the camera network. Go to "ssd_mobilenet_v3\re-id.py" and change cam_num (line 15) value.
+13. Use 'python re-id.py' to run. The time it takes to boot up depending on the processor of the computer. 
+
+
+## Notes
+Because of a bug in our program, in order to have the visualization saved, there must be a person present on the camera CONSECUTIVELY for at least 20 seconds.
+
+To view the results, you can either use the .csv file labeled_gal.csv in "ssd_mobilenet_v3\data\labeled_gal.csv" or go to visualization folder in "ssd_mobilenet_v3\data\visualization". Each numbered folder is the label for each person identified.
+
+
 
 ### Running the program
 11. type in termimal 'cd ssd_mobilenet_v3' to change the working directory
@@ -83,19 +86,6 @@ _Below is an example of how you can instruct your audience on installing and set
    ```
 
 <p align="right">(<a href="#top">back to top</a>)</p>
-
-
-
-<!-- USAGE EXAMPLES -->
-## Usage
-
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
-
-_For more examples, please refer to the [Documentation](https://example.com)_
-
-<p align="right">(<a href="#top">back to top</a>)</p>
-
-
 
 <!-- CONTRIBUTING -->
 ## Contributing
