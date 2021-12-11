@@ -6,7 +6,7 @@ from scipy.cluster.hierarchy import leaders
 from torchreid.utils.feature_extractor import FeatureExtractor
 import os
 from multiprocessing import Process, Queue
-from utilities import birch_clustering, DBSCAN_clustering, mean_shift_clustering, get_output, visualization
+from utilities import DBSCAN_clustering, get_output, visualization
 
 
 # function by which each camera thread runs
