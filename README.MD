@@ -45,10 +45,27 @@ Person Reidentification is an application that uses deep learning to accurately 
 This is an example of how you may give instructions on setting up your project locally.
 To get a local copy up and running follow these simple example steps.
 
-### Prerequisites
-
 ### Installation
+1. Create an empty folder to clone git
+2. Open that folder in VScode
+3. Open termimal and enter 'git clone https://github.com/Xaveee/deep-person-reid.git'
+4. CLOSE the current folder and open the one you just clone (deep-person-reid)
 
+# IMPORTANT: Make sure that you have deativated any conda environment. We dont want to install to the wrong environment
+
+### Create virtual environment
+5. Open the terminal and type 'py -m venv venv'
+### Install packages
+6. First activate the virtual environment by entering into the terminal '.\venv\scripts\activate'. You should see the '(venv)' at the beginning of your working folder
+7. Change your python interpreter. Press 'Ctrl + Shift + P'. Look for 'Python: select interpreter'. Select 'enter interpreter path'. Select 'venv\scripts\python.exe'. Now you should see that you are using the venv interpreter in the bottom left corner
+8. Install all packages by typing into the termimal 'pip install -r requirements.txt'
+### Install torch. 
+9. Type in the termimal 'pip3 install torch==1.10.0+cu113 torchvision==0.11.1+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html'
+10. Type in the termimal 'python setup.py develop'
+
+### Running the program
+11. type in termimal 'cd ssd_mobilenet_v3' to change the working directory
+12. Use 'python re-id.py' to run
 _Below is an example of how you can instruct your audience on installing and setting up your app. This template doesn't rely on any external dependencies or services._
 
 1. Get a free API Key at [https://example.com](https://example.com)
